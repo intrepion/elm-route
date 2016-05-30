@@ -18,7 +18,7 @@ home : Html Msg
 home =
     div []
         [ h1 [] [ text "Home Page" ]
-        , p [] [ link (PostR 123) "This post does not exist" ]
+        , p [] [ link (PostRoute "123") "This post does not exist" ]
         ]
 
 
@@ -44,7 +44,7 @@ posts : List Data.Post -> Html Msg
 posts posts =
     let
         postLink post =
-            li [] [ link (PostR post.id) post.title ]
+            li [] [ link (PostRoute post.id) post.title ]
     in
         div []
             [ h1 [] [ text "Posts" ]
@@ -56,22 +56,22 @@ view : Model -> Html Msg
 view model =
     div []
         [ ul []
-            [ li [] [ link (HomeR ()) "Home" ]
-            , li [] [ link (PostsR ()) "Posts" ]
-            , li [] [ link (AboutR ()) "About" ]
+            [ li [] [ link (HomeRoute ()) "Home" ]
+            , li [] [ link (PostsRoute ()) "Posts" ]
+            , li [] [ link (AboutRoute ()) "About" ]
             ]
         , case model.route of
-            HomeR () ->
+            HomeRoute () ->
                 home
 
-            PostsR () ->
-                if model.ready then
+            PostsRoute () ->
+                if model.postsGetAllReady then
                     posts model.posts
                 else
                     loading
 
-            PostR id ->
-                case ( model.ready, model.post ) of
+            PostRoute id ->
+                case ( model.postsGetSingleReady, model.post ) of
                     ( False, _ ) ->
                         loading
 
@@ -81,10 +81,10 @@ view model =
                     ( True, Just p ) ->
                         post p
 
-            AboutR () ->
+            AboutRoute () ->
                 about
 
-            NotFoundR ->
+            NotFoundRoute ->
                 notFound
         ]
 

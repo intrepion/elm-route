@@ -5,55 +5,55 @@ import Route exposing (..)
 
 
 type Sitemap
-    = HomeR ()
-    | PostsR ()
-    | PostR Int
-    | AboutR ()
-    | NotFoundR
+    = HomeRoute ()
+    | PostsRoute ()
+    | PostRoute String
+    | AboutRoute ()
+    | NotFoundRoute
 
 
-homeR =
-    HomeR := static ""
+homeRoute =
+    HomeRoute := static ""
 
 
-postsR =
-    PostsR := static "posts"
+postsRoute =
+    PostsRoute := static "posts"
 
 
-postR =
-    PostR := "posts" <//> int
+postRoute =
+    PostRoute := "posts" <//> string
 
 
-aboutR =
-    AboutR := static "about"
+aboutRoute =
+    AboutRoute := static "about"
 
 
 sitemap =
-    router [ homeR, postsR, postR, aboutR ]
+    router [ homeRoute, postsRoute, postRoute, aboutRoute ]
 
 
 match : String -> Sitemap
 match =
     Route.match sitemap
-        >> Maybe.withDefault NotFoundR
+        >> Maybe.withDefault NotFoundRoute
 
 
 toString : Sitemap -> String
-toString r =
-    case r of
-        HomeR () ->
-            reverse homeR []
+toString route =
+    case route of
+        HomeRoute () ->
+            reverse homeRoute []
 
-        PostsR () ->
-            reverse postsR []
+        PostsRoute () ->
+            reverse postsRoute []
 
-        PostR id ->
-            reverse postR [ Basics.toString id ]
+        PostRoute string ->
+            reverse postRoute [ string ]
 
-        AboutR () ->
-            reverse aboutR []
+        AboutRoute () ->
+            reverse aboutRoute []
 
-        NotFoundR ->
+        NotFoundRoute ->
             Debug.crash "cannot render NotFound"
 
 

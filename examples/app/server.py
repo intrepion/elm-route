@@ -13,6 +13,12 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(f.read())
 
     def do_GET(self):
+        if self.path == "/api/posts/abcdef":
+            sleep(1)
+            return self.serve_file("abcdef.json", "application/json")
+        if self.path == "/api/posts/2":
+            sleep(1)
+            return self.serve_file("2.json", "application/json")
         if self.path == "/api/posts":
             sleep(1)
             return self.serve_file("posts.json", "application/json")

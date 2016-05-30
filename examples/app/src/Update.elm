@@ -1,6 +1,6 @@
 module Update exposing (Msg(..), Model, init, update, urlUpdate)
 
-import Data exposing (Post, fetchPosts)
+import Data exposing (Post, postsGetAll, postsGetSingle)
 import Http
 import Navigation exposing (Location)
 import Routes exposing (Sitemap(..))
@@ -9,27 +9,33 @@ import Task
 
 type alias Model =
     { route : Sitemap
-    , ready : Bool
+    , postsGetAllReady : Bool
     , posts : List Post
+    , postsGetSingleReady : Bool
     , post : Maybe Post
-    , error : Maybe String
+    , postsGetAllError : Maybe String
+    , postsGetSingleError : Maybe String
     }
 
 
 type Msg
     = RouteTo Sitemap
-    | FetchError Http.Error
-    | FetchSuccess (List Post)
+    | PostsGetAllError Http.Error
+    | PostsGetAllSuccess (List Post)
+    | PostsGetSingleError Http.Error
+    | PostsGetSingleSuccess Post
 
 
 init : Sitemap -> ( Model, Cmd Msg )
 init route =
     urlUpdate route
         { route = route
-        , ready = False
+        , postsGetAllReady = False
         , posts = []
+        , postsGetSingleReady = False
         , post = Nothing
-        , error = Nothing
+        , postsGetAllError = Nothing
+        , postsGetSingleError = Nothing
         }
 
 
@@ -39,36 +45,56 @@ update msg ({ route } as model) =
         RouteTo route ->
             model ! [ Routes.navigateTo route ]
 
-        FetchError error ->
-            { model | error = Just (toString error) } ! []
+        PostsGetAllError postsGetAllError ->
+            { model | postsGetAllError = Just (toString postsGetAllError) } ! []
 
-        FetchSuccess posts ->
-            urlUpdate route { model | ready = True, error = Nothing, posts = posts }
+        PostsGetAllSuccess posts ->
+            urlUpdate route { model | postsGetAllReady = True, posts = posts }
+
+        PostsGetSingleError postsGetSingleError ->
+            { model | postsGetSingleError = Just (toString postsGetSingleError) } ! []
+
+        PostsGetSingleSuccess post ->
+            urlUpdate route { model | postsGetSingleReady = True, post = Just post }
 
 
 urlUpdate : Sitemap -> Model -> ( Model, Cmd Msg )
-urlUpdate route ({ ready } as m) =
+urlUpdate route ({ postsGetAllReady, postsGetSingleReady } as m) =
     let
         model =
             { m | route = route }
     in
         case route of
-            PostsR () ->
-                if ready then
+            PostsRoute () ->
+                if postsGetAllReady then
                     model ! []
                 else
-                    model ! [ fetchPosts ]
+                    model ! [ postsGetAll ]
 
-            PostR id ->
-                if ready then
-                    { model | post = Data.lookupPost id model.posts } ! []
+            PostRoute id ->
+                if postsGetSingleReady && id == (postIdGet model.post) then
+                    model ! []
                 else
-                    model ! [ fetchPosts ]
+                    model ! [ postsGetSingle id ]
 
             _ ->
                 model ! []
 
 
-fetchPosts : Cmd Msg
-fetchPosts =
-    Task.perform FetchError FetchSuccess Data.fetchPosts
+postsGetAll : Cmd Msg
+postsGetAll =
+    Task.perform PostsGetAllError PostsGetAllSuccess Data.postsGetAll
+
+
+postsGetSingle : String -> Cmd Msg
+postsGetSingle id =
+    Task.perform PostsGetSingleError PostsGetSingleSuccess (Data.postsGetSingle id)
+
+
+postIdGet : Maybe Post -> String
+postIdGet maybePost =
+    case maybePost of
+        Just post ->
+            post.id
+        Nothing ->
+            ""
